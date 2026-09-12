@@ -87,7 +87,7 @@ registerProcessor('voice-fx', VoiceFX);
 `;
 
 /* ============================================================
-   2. Personaggi Predefiniti e Database Locale
+   2. Data & LocalStorage Setup
    ============================================================ */
 const DEFAULT_PRESETS = [
   {id:'orco', nome:'Orco', desc:'Brutale e cavernosa. Perfetta per barbari o giganti.',
@@ -112,8 +112,16 @@ const DEFAULT_PRESETS = [
    p:{pitch:-2, ring:110, ringMix:.25, comb:.25, combHz:350, crush:16, drive:.05}, f:{type:'lowpass', freq:2500, q:.5}},
 ];
 
-// Caricamento memorie locali
-let customVoices = JSON.parse(localStorage.getItem('gdr_voices')) || [];
+// Caricamento memorie locali blindato
+let customVoices = [];
+try {
+  const stored = localStorage.getItem('gdr_voices');
+  if (stored) customVoices = JSON.parse(stored);
+  if (!Array.isArray(customVoices)) customVoices = [];
+} catch(e) {
+  console.warn("Memoria del browser bloccata, avvio senza salvataggi precedenti.");
+}
+
 let ALL_PRESETS = [...DEFAULT_PRESETS, ...customVoices];
 
 const FADERS = [
@@ -126,15 +134,15 @@ const FADERS = [
 ];
 
 /* ============================================================
-   3. Logica di Rete e UI
+   3. Logica Globale e Audio Routing
    ============================================================ */
+const $ = s => document.querySelector(s);
 let ctx, node, filter, outGain, monGain, limiter, inGain, playGain, analyser, inAnalyser, recDest, stream, recorder, micTrack;
 let running = false, current = null, mode = 'ptt';
 let params = {...ALL_PRESETS[0].p, out:1};
 let chunks = [], takeN = 0, recPresetName = '';
 let pttChunks = [], pttRec = null, holding = false, lastSource = null;
 
-const $ = s => document.querySelector(s);
 const screenEl = $('#screen'), badge = $('#badgeText'), errBox = $('#err');
 
 function fail(msg) { errBox.textContent = msg; errBox.style.display = 'block'; }
@@ -225,7 +233,9 @@ function apply() {
   if(f.type === 'peaking') filter.gain.value = f.gain || 0;
 }
 
-/* --- Rendering Interfaccia --- */
+/* ============================================================
+   4. Gestione UI (Presets, Custom, Salvataggi)
+   ============================================================ */
 const presetBox = $('#presets');
 
 function renderPresets() {
@@ -265,35 +275,47 @@ function deleteVoice(id, e) {
   e.stopPropagation();
   if(!confirm("Cancellare questa voce dal grimorio?")) return;
   customVoices = customVoices.filter(v => v.id !== id);
-  localStorage.setItem('gdr_voices', JSON.stringify(customVoices));
   ALL_PRESETS = [...DEFAULT_PRESETS, ...customVoices];
+  
+  try {
+    localStorage.setItem('gdr_voices', JSON.stringify(customVoices));
+  } catch(err) {}
+
   if(current && current.id === id) selectPreset(ALL_PRESETS[0]);
   else renderPresets();
 }
 
-$('#saveVoiceBtn').onclick = () => {
+// Sistema di salvataggio a prova di Form e Mobile
+$('#saveForm').addEventListener('submit', (e) => {
+  e.preventDefault(); // Evita il ricaricamento della pagina
   const input = $('#customName');
   const name = input.value.trim();
-  if(!name) return alert("Scrivi un nome per l'entità prima di salvarla.");
+  
+  if(!name) return;
   
   const newVoice = {
     id: 'custom_' + Date.now(),
     nome: name,
     desc: 'Evocazione personalizzata. Creata dalle tue regolazioni.',
     p: { ...params },
-    f: { ...current.f },
+    f: { ...(current ? current.f : ALL_PRESETS[0].f) },
     isCustom: true
   };
   
   customVoices.push(newVoice);
-  localStorage.setItem('gdr_voices', JSON.stringify(customVoices));
   ALL_PRESETS = [...DEFAULT_PRESETS, ...customVoices];
   
+  try {
+    localStorage.setItem('gdr_voices', JSON.stringify(customVoices));
+  } catch (err) {
+    console.warn("Il browser impedisce il salvataggio permanente.");
+  }
+  
   input.value = '';
+  input.blur(); // Nasconde la tastiera su mobile
   selectPreset(newVoice);
-};
+});
 
-/* --- Faders --- */
 const faderBox = $('#faders'), inputs = {};
 FADERS.forEach(f => {
   const wrap = document.createElement('div');
@@ -318,7 +340,9 @@ function syncFaders() {
   });
 }
 
-/* --- Scope --- */
+/* ============================================================
+   5. Oscilloscopio e Registrazione Audio
+   ============================================================ */
 const cvs = $('#scope'), g2 = cvs.getContext('2d');
 function fit() {
   const dpr = window.devicePixelRatio || 1;
@@ -336,13 +360,13 @@ function draw() {
   const W = cvs.clientWidth, H = cvs.clientHeight, mid = H/2;
 
   g2.clearRect(0, 0, W, H);
-  g2.strokeStyle = 'rgba(212, 175, 55, 0.15)'; // Gold ombra
+  g2.strokeStyle = 'rgba(212, 175, 55, 0.15)'; 
   g2.lineWidth = 1;
   g2.beginPath(); g2.moveTo(0, mid); g2.lineTo(W, mid); g2.stroke();
 
-  g2.strokeStyle = '#d4af37'; // Tratto gold
+  g2.strokeStyle = '#d4af37';
   g2.lineWidth = 2;
-  g2.shadowColor = 'rgba(139,0,0,0.8)'; // Bagliore rosso sangue
+  g2.shadowColor = 'rgba(139,0,0,0.8)';
   g2.shadowBlur = 10;
   g2.beginPath();
   for(let i=0; i<n; i++){
@@ -363,7 +387,6 @@ function draw() {
   }
 }
 
-/* --- Recording --- */
 function toggleRec() {
   const btn = $('#rec');
   if(recorder && recorder.state === 'recording'){
@@ -420,6 +443,9 @@ $('#mPtt').onclick  = () => setMode('ptt');
 $('#mLive').onclick = () => setMode('live');
 $('#aec').onchange  = () => { if(running){ stop(); start(); } };
 
+/* ============================================================
+   6. Funzione PTT (Push to Talk)
+   ============================================================ */
 const pttBtn = $('#ptt');
 function pttStart(e) {
   if(!running || holding || pttBtn.disabled) return;
@@ -485,5 +511,5 @@ pttBtn.addEventListener('pointerleave', pttEnd);
 pttBtn.addEventListener('contextmenu', e => e.preventDefault());
 
 // Setup Iniziale
-selectPreset(ALL_PRESETS[0]); // Seleziona il primo e renderizza i pulsanti
+selectPreset(ALL_PRESETS[0]); 
 setMode('ptt');
