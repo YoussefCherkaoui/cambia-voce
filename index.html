@@ -52,10 +52,10 @@
     <section class="panel">
       <h2>Alchimia (Regola e Salva)</h2>
       <div class="faders" id="faders"></div>
-      <div class="save-zone">
-        <input type="text" id="customName" placeholder="Nome della nuova creatura..." maxlength="24">
-        <button id="saveVoiceBtn">Salva nel Grimorio</button>
-      </div>
+      <form id="saveForm" class="save-zone">
+        <input type="text" id="customName" placeholder="Nome della nuova creatura..." maxlength="24" required>
+        <button type="submit" id="saveVoiceBtn">Salva nel Grimorio</button>
+      </form>
     </section>
 
     <section class="panel">
