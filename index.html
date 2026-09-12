@@ -24,41 +24,27 @@
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
   body{
-    background:
-      radial-gradient(120% 80% at 50% 0%, #343a34 0%, #22261f 60%, #181b16 100%);
+    background: radial-gradient(120% 80% at 50% 0%, #343a34 0%, #22261f 60%, #181b16 100%);
     color:var(--ink);
     font-family:'Archivo',ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
-    font-size:15px;
-    line-height:1.5;
-    min-height:100vh;
-    padding:22px 16px 56px;
+    font-size:15px; line-height:1.5; min-height:100vh; padding:22px 16px 56px;
   }
   .wrap{max-width:780px;margin:0 auto}
 
   header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:18px}
-  h1{
-    font-family:'Archivo Narrow',Archivo,sans-serif;
-    font-weight:600;font-size:30px;letter-spacing:.01em;
-    margin:0;color:var(--ink);
-  }
+  h1{font-family:'Archivo Narrow',sans-serif;font-weight:600;font-size:30px;letter-spacing:.01em;margin:0;color:var(--ink);}
   header p{margin:0;color:var(--ink-dim);font-size:14px;max-width:42ch}
 
   .panel{
     background:linear-gradient(180deg,var(--panel-hi),var(--panel) 22%,var(--panel-lo));
-    border:1px solid var(--edge);
-    border-top-color:var(--lip);
-    border-radius:14px;
-    padding:16px;
-    margin-bottom:16px;
-    box-shadow:0 14px 30px rgba(0,0,0,.4), inset 0 1px 0 var(--lip);
+    border:1px solid var(--edge); border-top-color:var(--lip); border-radius:14px;
+    padding:16px; margin-bottom:16px; box-shadow:0 14px 30px rgba(0,0,0,.4), inset 0 1px 0 var(--lip);
   }
 
   /* ---- schermo ---- */
   .screen{
-    position:relative;background:var(--screen);
-    border-radius:8px;border:1px solid #050704;
-    box-shadow:inset 0 0 34px rgba(0,0,0,.9), inset 0 0 0 1px rgba(120,140,100,.09);
-    overflow:hidden;
+    position:relative;background:var(--screen);border-radius:8px;border:1px solid #050704;
+    box-shadow:inset 0 0 34px rgba(0,0,0,.9), inset 0 0 0 1px rgba(120,140,100,.09); overflow:hidden;
   }
   canvas{display:block;width:100%;height:158px}
   .screen .badge{
@@ -96,83 +82,52 @@
   .level{position:absolute;left:11px;right:11px;bottom:10px;height:4px;border-radius:2px;background:rgba(120,150,90,.13);overflow:hidden}
   .level span{display:block;height:100%;width:0%;background:var(--teal);border-radius:2px;transition:width .06s linear}
   #player{display:none}
+  
   .modes{display:flex;gap:0;background:#1b1f1a;border:1px solid var(--edge);border-radius:8px;padding:3px;margin-top:4px}
-  .modes button{
-    flex:1;background:transparent;border:none;box-shadow:none;border-radius:6px;padding:9px 12px;
-    color:var(--ink-dim);font-size:14px;
-  }
-  .modes button[aria-pressed="true"]{
-    background:linear-gradient(180deg,#4e574c,#3b433a);color:var(--ink);
-    box-shadow:0 1px 0 rgba(255,255,255,.07) inset, 0 2px 5px rgba(0,0,0,.35);
-  }
-  .modes button:active{transform:none}
-  .ptt{
-    width:100%;padding:26px;font-size:19px;margin-top:14px;
-    background:linear-gradient(180deg,#454d45,#333a33);touch-action:none;
-  }
+  .modes button{flex:1;background:transparent;border:none;box-shadow:none;border-radius:6px;padding:9px 12px;color:var(--ink-dim);font-size:14px;}
+  .modes button[aria-pressed="true"]{background:linear-gradient(180deg,#4e574c,#3b433a);color:var(--ink);box-shadow:0 1px 0 rgba(255,255,255,.07) inset, 0 2px 5px rgba(0,0,0,.35);}
+  
+  .ptt{width:100%;padding:26px;font-size:19px;margin-top:14px;background:linear-gradient(180deg,#454d45,#333a33);touch-action:none;}
   .ptt.held{background:linear-gradient(180deg,#c9711d,#9c5413);border-color:#6d3a0c;color:#fff5e8}
   .ptt.playing{background:linear-gradient(180deg,#3f6b60,#2d5048);border-color:#1e3a33;color:#dff0ea}
+  
   .switch{display:flex;align-items:center;gap:9px;color:var(--ink-dim);font-size:14px;cursor:pointer;user-select:none}
-  .switch input{appearance:none;width:40px;height:22px;border-radius:11px;background:#1d211c;
-    border:1px solid var(--edge);position:relative;cursor:pointer;transition:background .18s;margin:0}
-  .switch input::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;
-    background:#6d7568;transition:transform .18s,background .18s}
+  .switch input{appearance:none;width:40px;height:22px;border-radius:11px;background:#1d211c;border:1px solid var(--edge);position:relative;cursor:pointer;transition:background .18s;margin:0}
+  .switch input::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#6d7568;transition:transform .18s,background .18s}
   .switch input:checked{background:#4a3a1a}
   .switch input:checked::after{transform:translateX(18px);background:var(--amber)}
-  .switch input:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
 
   .note{font-size:13px;color:var(--ink-dim);margin:10px 0 0}
   .warn{color:var(--amber-soft)}
 
-  /* ---- preset ---- */
+  /* ---- preset & fader ---- */
   h2{font-family:'Archivo Narrow',sans-serif;font-weight:600;font-size:16px;margin:0 0 12px;color:var(--ink)}
   .presets{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
-  .preset{
-    display:flex;flex-direction:column;align-items:flex-start;gap:6px;
-    padding:12px 11px;text-align:left;line-height:1.25;
-  }
+  .preset{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:12px 11px;text-align:left;line-height:1.25;}
   .preset .lamp{width:100%;height:3px;border-radius:2px;background:#242922}
   .preset[aria-pressed="true"]{background:linear-gradient(180deg,#4e574c,#3b433a)}
   .preset[aria-pressed="true"] .lamp{background:var(--amber);box-shadow:0 0 8px var(--amber)}
 
-  /* ---- fader ---- */
   .faders{display:grid;grid-template-columns:repeat(2,1fr);gap:14px 26px}
   .fader label{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;color:var(--ink-dim);margin-bottom:5px}
   .fader b{color:var(--ink);font-weight:500;font-variant-numeric:tabular-nums}
   input[type=range]{appearance:none;width:100%;height:22px;background:transparent;margin:0;cursor:pointer}
-  input[type=range]:focus-visible{outline:2px solid var(--teal);outline-offset:4px;border-radius:4px}
-  input[type=range]::-webkit-slider-runnable-track{height:5px;border-radius:3px;
-    background:#171b16;box-shadow:inset 0 1px 3px rgba(0,0,0,.8)}
-  input[type=range]::-webkit-slider-thumb{appearance:none;width:15px;height:21px;border-radius:3px;margin-top:-8px;
-    background:linear-gradient(180deg,#cdc7b6,#8e897b);border:1px solid #13160f;box-shadow:0 1px 3px rgba(0,0,0,.6)}
-  input[type=range]::-moz-range-track{height:5px;border-radius:3px;background:#171b16}
-  input[type=range]::-moz-range-thumb{width:15px;height:21px;border-radius:3px;
-    background:linear-gradient(180deg,#cdc7b6,#8e897b);border:1px solid #13160f}
+  input[type=range]::-webkit-slider-runnable-track{height:5px;border-radius:3px;background:#171b16;box-shadow:inset 0 1px 3px rgba(0,0,0,.8)}
+  input[type=range]::-webkit-slider-thumb{appearance:none;width:15px;height:21px;border-radius:3px;margin-top:-8px;background:linear-gradient(180deg,#cdc7b6,#8e897b);border:1px solid #13160f;}
 
-  /* ---- registrazioni ---- */
   #takes{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:10px}
-  #takes li{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
-    background:#232720;border:1px solid var(--edge);border-radius:8px;padding:10px 12px}
+  #takes li{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#232720;border:1px solid var(--edge);border-radius:8px;padding:10px 12px}
   #takes .who{font-family:'Archivo Narrow',sans-serif;font-size:14px;min-width:88px}
   #takes audio{height:32px;flex:1;min-width:190px}
   #takes a{color:var(--teal);font-size:13.5px;text-decoration:none;border-bottom:1px solid rgba(121,179,165,.4)}
-  #takes a:hover{color:#9ed0c4}
   .empty{color:var(--ink-dim);font-size:13.5px;margin:10px 0 0}
+  #err{display:none;background:#43241f;border:1px solid #6b342b;color:#f2c4b8;border-radius:8px;padding:12px 14px;font-size:14px;margin-bottom:16px}
 
-  #err{display:none;background:#43241f;border:1px solid #6b342b;color:#f2c4b8;
-    border-radius:8px;padding:12px 14px;font-size:14px;margin-bottom:16px}
-
-  @media (max-width:620px){
-    .presets{grid-template-columns:repeat(2,1fr)}
-    .faders{grid-template-columns:1fr}
-    h1{font-size:25px}
-  }
-  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  @media (max-width:620px){ .presets{grid-template-columns:repeat(2,1fr)} .faders{grid-template-columns:1fr} h1{font-size:25px} }
 </style>
 </head>
 <body>
 <div class="wrap">
-
   <header>
     <h1>Cambia voce</h1>
     <p>Parla al microfono, senti l'effetto mentre parli.</p>
@@ -188,7 +143,7 @@
       <div class="level"><span id="lvFill"></span></div>
     </div>
 
-    <div class="modes" role="group" aria-label="Modalità di ascolto">
+    <div class="modes" role="group">
       <button id="mPtt" aria-pressed="true">Parla e riascolta</button>
       <button id="mLive" aria-pressed="false">Diretta continua</button>
     </div>
@@ -204,9 +159,7 @@
     </div>
 
     <audio id="player" playsinline></audio>
-
     <button id="ptt" class="ptt" disabled>Tieni premuto e parla</button>
-
     <p class="note warn" id="tip">La voce esce dalla cassa quando lasci il pulsante, così il microfono non si risente mai.</p>
   </section>
 
@@ -223,27 +176,26 @@
 
   <section class="panel">
     <h2>Registrazioni</h2>
-    <p class="empty" id="empty">Ancora niente. Premi Registra mentre parli e la traccia finisce qui.</p>
+    <p class="empty" id="empty">Premi Registra mentre parli e la traccia finirà qui.</p>
     <ul id="takes"></ul>
   </section>
-
 </div>
 
 <script>
 /* ============================================================
-   1. Il motore audio (AudioWorklet, gira su thread separato)
+   1. Il motore audio (Corretto contro distorsioni e clipping)
    ============================================================ */
 const workletSrc = `
 class VoiceFX extends AudioWorkletProcessor {
   constructor(){
     super();
-    this.N = 2048;                      // delay line per il pitch shift
+    this.N = 2048; 
     this.buf = new Float32Array(this.N);
     this.w = 0; this.off = 0;
     this.ringPhase = 0;
     this.comb = new Float32Array(4096); this.ci = 0;
     this.hold = 0; this.holdCount = 0;
-    this.env = 0;
+    this.env = 0; this.gateVal = 1;
     this.p = {pitch:0, ring:0, ringMix:0, comb:0, combHz:250, crush:16, drive:0, out:1};
     this.port.onmessage = e => Object.assign(this.p, e.data);
   }
@@ -264,50 +216,51 @@ class VoiceFX extends AudioWorkletProcessor {
     const cd = Math.max(2, Math.min(4000, Math.floor(sampleRate / Math.max(40, p.combHz))));
     const levels = Math.pow(2, p.crush) - 1;
     const srDiv = p.crush < 16 ? Math.max(1, Math.floor((16 - p.crush)/2)) : 1;
-    const k = p.drive*22 + 1;
-    const gate = 0.0035;
+    const k = p.drive*10 + 1; // Ridotta l'intensità del drive per non bruciare l'audio
 
     for(let i=0; i<x.length; i++){
       let s = x[i];
 
-      // noise gate: taglia il fruscio quando nessuno parla
+      // NOISE GATE: Reso molto più fluido e con soglia più sensibile
       const a = Math.abs(s);
-      this.env = a > this.env ? this.env*0.7 + a*0.3 : this.env*0.9996;
-      if(this.env < gate) s *= 0.04;
+      this.env = a > this.env ? this.env*0.5 + a*0.5 : this.env*0.999;
+      let targetGate = this.env > 0.002 ? 1.0 : 0.0;
+      this.gateVal = this.gateVal * 0.995 + targetGate * 0.005;
+      s *= this.gateVal;
 
-      // --- pitch shift: due prese sulla delay line, incrociate ---
+      // PITCH SHIFT
       this.buf[this.w] = s;
       if(p.pitch !== 0){
         this.off -= drift;
         while(this.off < 0) this.off += N;
         while(this.off >= N) this.off -= N;
         const u = this.off / N;
-        const g1 = Math.sin(Math.PI*u);            // g1^2 + g2^2 = 1
-        const g2 = Math.abs(Math.cos(Math.PI*u));  // niente buchi di volume
+        const g1 = Math.sin(Math.PI*u);            
+        const g2 = Math.abs(Math.cos(Math.PI*u));  
         s = this.tap(this.off)*g1 + this.tap((this.off + half) % N)*g2;
       }
       this.w = (this.w + 1) % N;
 
-      // --- saturazione ---
+      // SATURAZIONE PIU' MORBIDA
       if(p.drive > 0) s = Math.tanh(s*k)/Math.tanh(k)*0.92 + s*0.08;
 
-      // --- comb filter: il timbro "lattina" ---
+      // COMB FILTER: Limitato il feedback per evitare i fischi (Larsen)
       if(p.comb > 0){
         const ri = (this.ci - cd + 4096) % 4096;
         s = s + this.comb[ri]*p.comb;
-        this.comb[this.ci] = Math.max(-1.5, Math.min(1.5, s));
+        this.comb[this.ci] = Math.tanh(s); // Soft clip vitale anti-innesco
         this.ci = (this.ci + 1) % 4096;
-        s *= (1 - p.comb*0.45);
+        s *= (1 - p.comb*0.4); 
       }
 
-      // --- ring modulation: il robot classico ---
+      // RING MODULATION: Rimosso il moltiplicatore * 1.7 che causava clipping estremo
       if(p.ring > 0 && p.ringMix > 0){
         this.ringPhase += ringInc;
         if(this.ringPhase > TAU) this.ringPhase -= TAU;
-        s = s*(1 - p.ringMix) + s*Math.sin(this.ringPhase)*p.ringMix*1.7;
+        s = s*(1 - p.ringMix) + s*Math.sin(this.ringPhase)*p.ringMix;
       }
 
-      // --- bitcrusher + riduzione sample rate ---
+      // BITCRUSHER
       if(p.crush < 16){
         if(this.holdCount % srDiv === 0) this.hold = Math.round(s*levels)/levels;
         this.holdCount++;
@@ -324,38 +277,38 @@ registerProcessor('voice-fx', VoiceFX);
 `;
 
 /* ============================================================
-   2. Preset e parametri
+   2. Preset: Bilanciati per essere più chiari e meno rumorosi
    ============================================================ */
 const PRESETS = [
   {id:'robot',  nome:'Robot',    desc:'Il classico da fantascienza: modulazione ad anello bassa più risonanza metallica.',
-   p:{pitch:0,  ring:48,  ringMix:.9, comb:.5,  combHz:300, crush:16, drive:.2},  f:{type:'bandpass', freq:1300, q:.6}},
+   p:{pitch:0,  ring:48,  ringMix:.6, comb:.25,  combHz:300, crush:16, drive:.1},  f:{type:'bandpass', freq:1300, q:.6}},
   {id:'cyborg', nome:'Cyborg',   desc:'Voce umana ma incrinata: un po\u2019 più grave, un filo di bit sporchi.',
-   p:{pitch:-3, ring:90,  ringMix:.45,comb:.35, combHz:170, crush:9,  drive:.35}, f:{type:'peaking', freq:1000, q:1, gain:0}},
+   p:{pitch:-3, ring:90,  ringMix:.3, comb:.2, combHz:170, crush:10, drive:.2}, f:{type:'peaking', freq:1000, q:1, gain:0}},
   {id:'alieno', nome:'Alieno',   desc:'Acuta e sibilante, con una modulazione alta che sposta le armoniche.',
-   p:{pitch:7,  ring:145, ringMix:.6, comb:.4,  combHz:520, crush:16, drive:.15}, f:{type:'highpass', freq:260, q:.7}},
+   p:{pitch:4,  ring:145, ringMix:.4, comb:.25, combHz:520, crush:16, drive:.1}, f:{type:'highpass', freq:260, q:.7}},
   {id:'titano', nome:'Titano',   desc:'Molto grave e cavernosa, come dentro un silo di cemento.',
-   p:{pitch:-9, ring:0,   ringMix:0,  comb:.32, combHz:70,  crush:16, drive:.4},  f:{type:'lowpass', freq:2100, q:.9}},
+   p:{pitch:-7, ring:0,   ringMix:0,  comb:.25, combHz:70,  crush:16, drive:.3},  f:{type:'lowpass', freq:2100, q:.9}},
   {id:'folle',  nome:'Folletto', desc:'Acutissima, senza altri effetti: la voce resta comprensibile.',
-   p:{pitch:9,  ring:0,   ringMix:0,  comb:0,   combHz:250, crush:16, drive:.1},  f:{type:'highpass', freq:300, q:.7}},
+   p:{pitch:8,  ring:0,   ringMix:0,  comb:0,   combHz:250, crush:16, drive:.0},  f:{type:'highpass', freq:300, q:.7}},
   {id:'radio',  nome:'Radio rotta', desc:'Banda stretta, campionamento sporco: sembra una ricetrasmittente scarica.',
-   p:{pitch:0,  ring:0,   ringMix:0,  comb:.15, combHz:400, crush:5,  drive:.6},  f:{type:'bandpass', freq:1750, q:3.5}},
+   p:{pitch:0,  ring:0,   ringMix:0,  comb:.1, combHz:400, crush:6,  drive:.4},  f:{type:'bandpass', freq:1750, q:3.5}},
   {id:'fanta',  nome:'Fantasma', desc:'Coda metallica lunga e un battito lento che fa tremare la voce.',
-   p:{pitch:-1, ring:6,   ringMix:.5, comb:.75, combHz:105, crush:16, drive:.2},  f:{type:'peaking', freq:1000, q:1, gain:0}},
+   p:{pitch:-1, ring:6,   ringMix:.4, comb:.6, combHz:105, crush:16, drive:.1},  f:{type:'peaking', freq:1000, q:1, gain:0}},
   {id:'vocoder',nome:'Vocoder',  desc:'Il timbro da ritornello elettronico: modulazione fitta più saturazione.',
-   p:{pitch:0,  ring:62,  ringMix:1,  comb:.6,  combHz:240, crush:10, drive:.5},  f:{type:'bandpass', freq:1200, q:.8}},
+   p:{pitch:0,  ring:62,  ringMix:.8, comb:.4, combHz:240, crush:12, drive:.3},  f:{type:'bandpass', freq:1200, q:.8}},
 ];
 
 const FADERS = [
   {k:'pitch',  nome:'Tono',        min:-12, max:12,  step:1,   fmt:v=> (v>0?'+':'')+v+' semitoni'},
   {k:'ring',   nome:'Modulazione', min:0,   max:300, step:1,   fmt:v=> v===0 ? 'spenta' : v+' Hz'},
-  {k:'ringMix',nome:'Quantità modulazione', min:0, max:1, step:.05, fmt:v=> Math.round(v*100)+'%'},
+  {k:'ringMix',nome:'Quantità mod.', min:0, max:1, step:.05, fmt:v=> Math.round(v*100)+'%'},
   {k:'comb',   nome:'Metallico',   min:0,   max:.9,  step:.05, fmt:v=> Math.round(v/.9*100)+'%'},
   {k:'crush',  nome:'Risoluzione', min:3,   max:16,  step:1,   fmt:v=> v>=16 ? 'piena' : v+' bit'},
   {k:'drive',  nome:'Saturazione', min:0,   max:1,   step:.05, fmt:v=> Math.round(v*100)+'%'},
 ];
 
 /* ============================================================
-   3. Stato e catena audio
+   3. Setup Audio Principale (AEC Sempre Attivo)
    ============================================================ */
 let ctx, node, filter, outGain, monGain, limiter, inGain, playGain, analyser, inAnalyser, recDest, stream, recorder, micTrack;
 let running = false, current = null, mode = 'ptt';
@@ -370,13 +323,12 @@ function fail(msg){ errBox.textContent = msg; errBox.style.display = 'block'; }
 
 async function start(){
   try{
-    // In diretta su cassa serve la cancellazione d'eco del sistema, altrimenti fischia.
-    const aecOn = (mode === 'live') && $('#aec').checked;
+    // CANCELLAZIONE ECO FORZATA PER PREVENIRE FISCHI
     stream = await navigator.mediaDevices.getUserMedia({
-      audio:{ echoCancellation:aecOn, noiseSuppression:aecOn, autoGainControl:false }
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
     });
   }catch(e){
-    fail('Non riesco ad accedere al microfono. Controlla il permesso del browser. Se stai guardando questa pagina dentro un\u2019anteprima, scarica il file e aprilo direttamente nel browser.');
+    fail('Non riesco ad accedere al microfono. Controlla il permesso del browser.');
     return;
   }
 
@@ -386,34 +338,37 @@ async function start(){
   URL.revokeObjectURL(url);
 
   const src = ctx.createMediaStreamSource(stream);
-  const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 85;
+  
+  // Taglio frequenze bassissime per pulizia
+  const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 100;
 
-  inGain  = ctx.createGain(); inGain.gain.value = 1;   // si azzera durante la riproduzione
+  inGain  = ctx.createGain(); inGain.gain.value = 1;
   node    = new AudioWorkletNode(ctx, 'voice-fx', {numberOfInputs:1, numberOfOutputs:1, outputChannelCount:[1]});
   filter  = ctx.createBiquadFilter();
-  outGain = ctx.createGain(); outGain.gain.value = 1.1;
-  monGain = ctx.createGain(); monGain.gain.value = (mode === 'live') ? 1 : 0;
+  outGain = ctx.createGain(); outGain.gain.value = 1;
+  monGain = ctx.createGain(); monGain.gain.value = (mode === 'live') ? 0.85 : 0; // Volume in diretta abbassato per sicurezza
   playGain = ctx.createGain();
   analyser = ctx.createAnalyser(); analyser.fftSize = 2048;
   recDest = ctx.createMediaStreamDestination();
 
-  // Limiter: impedisce che un principio di innesco diventi un fischio a volume pieno.
+  // LIMITER: Previene che picchi improvvisi spacchino le orecchie
   limiter = ctx.createDynamicsCompressor();
-  limiter.threshold.value = -6; limiter.knee.value = 0;
-  limiter.ratio.value = 20; limiter.attack.value = .002; limiter.release.value = .12;
+  limiter.threshold.value = -3; limiter.knee.value = 0;
+  limiter.ratio.value = 20; limiter.attack.value = .001; limiter.release.value = .1;
 
   src.connect(hp).connect(inGain).connect(node).connect(filter).connect(outGain);
   inAnalyser = ctx.createAnalyser(); inAnalyser.fftSize = 1024;
   hp.connect(inAnalyser);
   micTrack = stream.getAudioTracks()[0];
+  
   outGain.connect(analyser);
   outGain.connect(recDest);
   outGain.connect(monGain).connect(limiter);
+  
   playGain.connect(analyser);
   playGain.connect(limiter);
   limiter.connect(ctx.destination);
 
-  // iOS tiene il contesto muto finché non riceve audio dentro un gesto dell'utente.
   const unlock = ctx.createBufferSource();
   unlock.buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
   unlock.connect(ctx.destination); unlock.start();
@@ -455,9 +410,6 @@ function apply(){
   if(f.type === 'peaking') filter.gain.value = f.gain || 0;
 }
 
-/* ============================================================
-   4. Interfaccia
-   ============================================================ */
 const presetBox = $('#presets');
 PRESETS.forEach((pr, i) => {
   const b = document.createElement('button');
@@ -501,9 +453,6 @@ function syncFaders(){
   });
 }
 
-/* ============================================================
-   5. Oscilloscopio
-   ============================================================ */
 const cvs = $('#scope'), g2 = cvs.getContext('2d');
 function fit(){
   const dpr = window.devicePixelRatio || 1;
@@ -538,7 +487,6 @@ function draw(){
   g2.stroke();
   g2.shadowBlur = 0;
 
-  // livello del microfono: se resta a zero, il problema è in ingresso
   if(inAnalyser){
     const d2 = new Float32Array(inAnalyser.fftSize);
     inAnalyser.getFloatTimeDomainData(d2);
@@ -549,9 +497,6 @@ function draw(){
   }
 }
 
-/* ============================================================
-   6. Registrazione
-   ============================================================ */
 function toggleRec(){
   const btn = $('#rec');
   if(recorder && recorder.state === 'recording'){
@@ -588,17 +533,11 @@ function addTake(blob){
   $('#empty').style.display = 'none';
 }
 
-/* ============================================================
-   7. Collegamenti
-   ============================================================ */
 $('#power').onclick = () => running ? stop() : start();
 $('#rec').onclick = toggleRec;
 
-/* --- prova della cassa: un tono di test per capire se l'uscita funziona --- */
 $('#beep').onclick = async () => {
-  if(!ctx){
-    ctx = new (window.AudioContext || window.webkitAudioContext)();
-  }
+  if(!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
   await ctx.resume();
   const o = ctx.createOscillator(), g = ctx.createGain();
   o.type = 'sine'; o.frequency.value = 520;
@@ -607,10 +546,8 @@ $('#beep').onclick = async () => {
   g.gain.linearRampToValueAtTime(0, ctx.currentTime + .5);
   o.connect(g).connect(ctx.destination);
   o.start(); o.stop(ctx.currentTime + .55);
-  $('#tip').textContent = 'Se non hai sentito il tono, il problema è nell\u2019uscita: controlla il volume del telefono e, su iPhone, l\u2019interruttore del silenzioso.';
 };
 
-/* --- scelta della modalità --- */
 function setMode(m){
   const wasRunning = running;
   if(wasRunning) stop();
@@ -621,16 +558,14 @@ function setMode(m){
   $('#aecWrap').hidden = (m !== 'live');
   $('#tip').textContent = m === 'ptt'
     ? 'La voce esce dalla cassa quando lasci il pulsante, così il microfono non si risente mai.'
-    : 'Con la cassa tieni il volume basso e il telefono lontano dalla bocca, altrimenti parte il fischio. Con le cuffie nessun problema.';
+    : 'IMPORTANTE: Usa le cuffie per la diretta continua, altrimenti potresti sentire inneschi (fischi) o rimbombi.';
   if(wasRunning) start();
 }
 $('#mPtt').onclick  = () => setMode('ptt');
 $('#mLive').onclick = () => setMode('live');
 $('#aec').onchange  = () => { if(running){ stop(); start(); } };
 
-/* --- push to talk: registra mentre premi, riproduce quando lasci --- */
 const pttBtn = $('#ptt');
-
 function pttStart(e){
   if(!running || holding || pttBtn.disabled) return;
   e.preventDefault();
@@ -659,11 +594,9 @@ function pttEnd(e){
 async function playBack(){
   const blob = new Blob(pttChunks, {type: pttRec.mimeType || 'audio/webm'});
   if(blob.size < 1500){
-    fail('Non ho registrato nulla. Tieni premuto più a lungo, e controlla che la barra verde sotto l\u2019onda si muova mentre parli: se resta ferma, il microfono non sta captando.');
+    fail('Non ho registrato nulla. Tieni premuto più a lungo e assicurati di parlare da vicino.');
     resetPtt(); return;
   }
-  // Chiudo il microfono: su iOS libera l'uscita verso l'altoparlante,
-  // e in ogni caso impedisce che la cassa rientri nel microfono.
   inGain.gain.setTargetAtTime(0, ctx.currentTime, .01);
   if(micTrack) micTrack.enabled = false;
 
@@ -675,14 +608,14 @@ async function playBack(){
   badge.textContent = 'riproduzione';
   player.onended = resetPtt;
   player.onerror = () => {
-    fail('Il browser non riesce a riprodurre la registrazione (formato ' + (blob.type || 'sconosciuto') + '). Prova la modalità Diretta continua con le cuffie.');
+    fail('Il browser non riesce a riprodurre. Prova la modalità Diretta continua con le cuffie.');
     resetPtt();
   };
   try{
     await player.play();
     errBox.style.display = 'none';
   }catch(err){
-    fail('Riproduzione bloccata dal browser: ' + err.message + '. Tocca di nuovo il pulsante.');
+    fail('Riproduzione bloccata. Tocca di nuovo il pulsante.');
     resetPtt();
   }
 }
