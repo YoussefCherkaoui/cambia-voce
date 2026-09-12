@@ -3,63 +3,64 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cambia Voce - GDR Edition</title>
+  <title>Grimorio delle Voci - GDR</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Archivo+Narrow:wght@500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="wrap">
     <header>
-      <h1>Voci da Taverna</h1>
-      <p>Seleziona un personaggio, tieni premuto per parlare o usa la diretta per interpretare i tuoi PNG.</p>
+      <h1>Il Grimorio delle Voci</h1>
+      <p>Trasforma la tua voce. Scegli un'entità, regola i parametri e salva le tue evocazioni.</p>
     </header>
 
     <div id="err" role="alert"></div>
 
-    <section class="panel">
+    <section class="panel top-panel">
       <div class="screen" id="screen">
         <canvas id="scope"></canvas>
-        <div class="badge"><span class="dot"></span><span id="badgeText">microfono spento</span></div>
-        <div class="hint">Attiva il microfono per vedere la tua voce qui.</div>
+        <div class="badge"><span class="dot"></span><span id="badgeText">Sigillo Chiuso</span></div>
         <div class="level"><span id="lvFill"></span></div>
       </div>
 
       <div class="modes" role="group">
-        <button id="mPtt" aria-pressed="true">Parla e riascolta (Sicuro)</button>
-        <button id="mLive" aria-pressed="false">Diretta (Usa cuffie!)</button>
+        <button id="mPtt" aria-pressed="true">Tieni e Parla (Sicuro)</button>
+        <button id="mLive" aria-pressed="false">Incanto Continuo (Usa cuffie)</button>
       </div>
 
       <div class="bar">
-        <button id="power" class="go">Attiva microfono</button>
+        <button id="power" class="go">Apri Sigillo (Attiva Mic)</button>
         <button id="rec" class="rec" disabled>Registra</button>
-        <button id="beep">Prova Audio</button>
-        <label class="switch" id="aecWrap" hidden title="Riduce il rientro della cassa nel microfono">
+        <label class="switch" id="aecWrap" hidden>
           <input type="checkbox" id="aec" checked>
-          <span>Anti-fischio</span>
+          <span>Anti-eco</span>
         </label>
       </div>
 
       <audio id="player" playsinline></audio>
-      <button id="ptt" class="ptt" disabled>Tieni premuto e parla</button>
-      <p class="note warn" id="tip">La voce uscirà appena rilasci il pulsante. Perfetto per preparare la battuta senza sovrapposizioni.</p>
+      <button id="ptt" class="ptt" disabled>Premi e Recita la Battuta</button>
     </section>
 
     <section class="panel">
-      <h2>Personaggi</h2>
+      <h2>Entità Conosciute</h2>
       <div class="presets" id="presets"></div>
       <p class="note" id="presetDesc"></p>
     </section>
 
     <section class="panel">
-      <h2>Regolazioni Fini</h2>
+      <h2>Alchimia (Regola e Salva)</h2>
       <div class="faders" id="faders"></div>
+      <div class="save-zone">
+        <input type="text" id="customName" placeholder="Nome della nuova creatura..." maxlength="24">
+        <button id="saveVoiceBtn">Salva nel Grimorio</button>
+      </div>
     </section>
 
     <section class="panel">
-      <h2>Archivio Sessione (Registrazioni)</h2>
-      <p class="empty" id="empty">Nessuna registrazione. Premi "Registra" e salva le frasi salienti per la prossima campagna.</p>
+      <h2>Memorie della Campagna</h2>
+      <p class="empty" id="empty">Il tomo è vuoto. Registra le profezie e compariranno qui.</p>
       <ul id="takes"></ul>
     </section>
   </div>
