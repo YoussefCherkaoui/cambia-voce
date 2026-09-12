@@ -93,6 +93,9 @@
   .go:hover{background:linear-gradient(180deg,#d97d22,#a95c16)}
   .rec.armed{background:linear-gradient(180deg,#b8392f,#8b2a22);border-color:#651c16;color:#ffeae7}
 
+  .level{position:absolute;left:11px;right:11px;bottom:10px;height:4px;border-radius:2px;background:rgba(120,150,90,.13);overflow:hidden}
+  .level span{display:block;height:100%;width:0%;background:var(--teal);border-radius:2px;transition:width .06s linear}
+  #player{display:none}
   .modes{display:flex;gap:0;background:#1b1f1a;border:1px solid var(--edge);border-radius:8px;padding:3px;margin-top:4px}
   .modes button{
     flex:1;background:transparent;border:none;box-shadow:none;border-radius:6px;padding:9px 12px;
@@ -182,6 +185,7 @@
       <canvas id="scope"></canvas>
       <div class="badge"><span class="dot"></span><span id="badgeText">microfono spento</span></div>
       <div class="hint">Attiva il microfono per vedere la tua voce qui.</div>
+      <div class="level"><span id="lvFill"></span></div>
     </div>
 
     <div class="modes" role="group" aria-label="Modalità di ascolto">
@@ -192,11 +196,14 @@
     <div class="bar">
       <button id="power" class="go">Attiva microfono</button>
       <button id="rec" class="rec" disabled>Registra</button>
+      <button id="beep">Prova la cassa</button>
       <label class="switch" id="aecWrap" hidden title="Riduce il rientro della cassa nel microfono">
         <input type="checkbox" id="aec" checked>
         <span>Anti-fischio</span>
       </label>
     </div>
+
+    <audio id="player" playsinline></audio>
 
     <button id="ptt" class="ptt" disabled>Tieni premuto e parla</button>
 
@@ -350,7 +357,7 @@ const FADERS = [
 /* ============================================================
    3. Stato e catena audio
    ============================================================ */
-let ctx, node, filter, outGain, monGain, limiter, inGain, playGain, analyser, recDest, stream, recorder;
+let ctx, node, filter, outGain, monGain, limiter, inGain, playGain, analyser, inAnalyser, recDest, stream, recorder, micTrack;
 let running = false, current = null, mode = 'ptt';
 let params = {...PRESETS[0].p, out:1};
 let chunks = [], takeN = 0, recPresetName = '';
@@ -396,12 +403,20 @@ async function start(){
   limiter.ratio.value = 20; limiter.attack.value = .002; limiter.release.value = .12;
 
   src.connect(hp).connect(inGain).connect(node).connect(filter).connect(outGain);
+  inAnalyser = ctx.createAnalyser(); inAnalyser.fftSize = 1024;
+  hp.connect(inAnalyser);
+  micTrack = stream.getAudioTracks()[0];
   outGain.connect(analyser);
   outGain.connect(recDest);
   outGain.connect(monGain).connect(limiter);
   playGain.connect(analyser);
   playGain.connect(limiter);
   limiter.connect(ctx.destination);
+
+  // iOS tiene il contesto muto finché non riceve audio dentro un gesto dell'utente.
+  const unlock = ctx.createBufferSource();
+  unlock.buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+  unlock.connect(ctx.destination); unlock.start();
 
   await ctx.resume();
   running = true;
@@ -522,6 +537,16 @@ function draw(){
   }
   g2.stroke();
   g2.shadowBlur = 0;
+
+  // livello del microfono: se resta a zero, il problema è in ingresso
+  if(inAnalyser){
+    const d2 = new Float32Array(inAnalyser.fftSize);
+    inAnalyser.getFloatTimeDomainData(d2);
+    let sum = 0;
+    for(let i=0; i<d2.length; i++) sum += d2[i]*d2[i];
+    const rms = Math.sqrt(sum/d2.length);
+    $('#lvFill').style.width = Math.min(100, rms*320) + '%';
+  }
 }
 
 /* ============================================================
@@ -568,6 +593,22 @@ function addTake(blob){
    ============================================================ */
 $('#power').onclick = () => running ? stop() : start();
 $('#rec').onclick = toggleRec;
+
+/* --- prova della cassa: un tono di test per capire se l'uscita funziona --- */
+$('#beep').onclick = async () => {
+  if(!ctx){
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  await ctx.resume();
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = 'sine'; o.frequency.value = 520;
+  g.gain.setValueAtTime(0, ctx.currentTime);
+  g.gain.linearRampToValueAtTime(.35, ctx.currentTime + .02);
+  g.gain.linearRampToValueAtTime(0, ctx.currentTime + .5);
+  o.connect(g).connect(ctx.destination);
+  o.start(); o.stop(ctx.currentTime + .55);
+  $('#tip').textContent = 'Se non hai sentito il tono, il problema è nell\u2019uscita: controlla il volume del telefono e, su iPhone, l\u2019interruttore del silenzioso.';
+};
 
 /* --- scelta della modalità --- */
 function setMode(m){
@@ -616,26 +657,39 @@ function pttEnd(e){
 }
 
 async function playBack(){
-  const blob = new Blob(pttChunks, {type: pttRec.mimeType});
-  if(blob.size < 1200){ resetPtt(); return; }
+  const blob = new Blob(pttChunks, {type: pttRec.mimeType || 'audio/webm'});
+  if(blob.size < 1500){
+    fail('Non ho registrato nulla. Tieni premuto più a lungo, e controlla che la barra verde sotto l\u2019onda si muova mentre parli: se resta ferma, il microfono non sta captando.');
+    resetPtt(); return;
+  }
+  // Chiudo il microfono: su iOS libera l'uscita verso l'altoparlante,
+  // e in ogni caso impedisce che la cassa rientri nel microfono.
+  inGain.gain.setTargetAtTime(0, ctx.currentTime, .01);
+  if(micTrack) micTrack.enabled = false;
+
+  const player = $('#player');
+  player.src = URL.createObjectURL(blob);
+  player.volume = 1;
+  pttBtn.classList.add('playing');
+  pttBtn.textContent = 'Sto riproducendo…';
+  badge.textContent = 'riproduzione';
+  player.onended = resetPtt;
+  player.onerror = () => {
+    fail('Il browser non riesce a riprodurre la registrazione (formato ' + (blob.type || 'sconosciuto') + '). Prova la modalità Diretta continua con le cuffie.');
+    resetPtt();
+  };
   try{
-    const audio = await ctx.decodeAudioData(await blob.arrayBuffer());
-    // Chiudo l'ingresso: la cassa può suonare forte senza rientrare nel microfono.
-    inGain.gain.setTargetAtTime(0, ctx.currentTime, .01);
-    const s = ctx.createBufferSource();
-    s.buffer = audio;
-    s.connect(playGain);
-    s.onended = () => { lastSource = null; resetPtt(); };
-    lastSource = s;
-    s.start();
-    pttBtn.classList.add('playing');
-    pttBtn.textContent = 'Sto riproducendo…';
-    badge.textContent = 'riproduzione';
-  }catch(err){ resetPtt(); }
+    await player.play();
+    errBox.style.display = 'none';
+  }catch(err){
+    fail('Riproduzione bloccata dal browser: ' + err.message + '. Tocca di nuovo il pulsante.');
+    resetPtt();
+  }
 }
 
 function resetPtt(){
   if(!running) return;
+  if(micTrack) micTrack.enabled = true;
   inGain.gain.setTargetAtTime(1, ctx.currentTime, .05);
   pttBtn.classList.remove('held','playing');
   pttBtn.textContent = 'Tieni premuto e parla';
