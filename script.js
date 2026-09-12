@@ -37,14 +37,12 @@ class VoiceFX extends AudioWorkletProcessor {
     for(let i=0; i<x.length; i++){
       let s = x[i];
 
-      // Noise Gate Fluido
       const a = Math.abs(s);
       this.env = a > this.env ? this.env*0.5 + a*0.5 : this.env*0.999;
       let targetGate = this.env > 0.002 ? 1.0 : 0.0;
       this.gateVal = this.gateVal * 0.995 + targetGate * 0.005;
       s *= this.gateVal;
 
-      // Pitch Shift
       this.buf[this.w] = s;
       if(p.pitch !== 0){
         this.off -= drift;
@@ -57,10 +55,8 @@ class VoiceFX extends AudioWorkletProcessor {
       }
       this.w = (this.w + 1) % N;
 
-      // Saturazione
       if(p.drive > 0) s = Math.tanh(s*k)/Math.tanh(k)*0.92 + s*0.08;
 
-      // Comb Filter (Metallo/Rimbombo con Limiter integrato)
       if(p.comb > 0){
         const ri = (this.ci - cd + 4096) % 4096;
         s = s + this.comb[ri]*p.comb;
@@ -69,14 +65,12 @@ class VoiceFX extends AudioWorkletProcessor {
         s *= (1 - p.comb*0.4); 
       }
 
-      // Ring Modulation (Voce Robot/Aliena)
       if(p.ring > 0 && p.ringMix > 0){
         this.ringPhase += ringInc;
         if(this.ringPhase > TAU) this.ringPhase -= TAU;
         s = s*(1 - p.ringMix) + s*Math.sin(this.ringPhase)*p.ringMix;
       }
 
-      // Bitcrusher (Invecchiamento Voce)
       if(p.crush < 16){
         if(this.holdCount % srDiv === 0) this.hold = Math.round(s*levels)/levels;
         this.holdCount++;
@@ -93,42 +87,50 @@ registerProcessor('voice-fx', VoiceFX);
 `;
 
 /* ============================================================
-   2. Personaggi Fantasy e Parametri Interfaccia
+   2. Personaggi Predefiniti e Database Locale
    ============================================================ */
-const PRESETS = [
-  {id:'orco', nome:'Orco / Gigante', desc:'Voce profonda, brutale e cavernosa. Perfetta per barbari, orchi o creature enormi.',
+const DEFAULT_PRESETS = [
+  {id:'orco', nome:'Orco', desc:'Brutale e cavernosa. Perfetta per barbari o giganti.',
    p:{pitch:-7, ring:0, ringMix:0, comb:.15, combHz:80, crush:16, drive:.35}, f:{type:'lowpass', freq:1800, q:.7}},
-  {id:'demone', nome:'Demone', desc:'Infernale e spaventosa. Un mix tra tono bassissimo e una vibrazione metallica oscura.',
+  {id:'demone', nome:'Demone', desc:'Infernale e spaventosa, con vibrazione oscura.',
    p:{pitch:-10, ring:45, ringMix:.4, comb:.3, combHz:110, crush:15, drive:.5}, f:{type:'peaking', freq:900, q:1, gain:0}},
-  {id:'goblin', nome:'Goblin', desc:'Acuta, nasale e fastidiosa. Ideale per piccoli mostri subdoli o mercanti truffaldini.',
+  {id:'drago', nome:'Drago Antico', desc:'Profonda, raschiante e leggermente distorta.',
+   p:{pitch:-8, ring:15, ringMix:.15, comb:.25, combHz:60, crush:14, drive:.6}, f:{type:'lowpass', freq:1500, q:1}},
+  {id:'goblin', nome:'Goblin', desc:'Acuta e nasale. Ideale per mostri subdoli o mercanti.',
    p:{pitch:7, ring:0, ringMix:0, comb:.1, combHz:600, crush:16, drive:.1}, f:{type:'bandpass', freq:2500, q:1}},
-  {id:'fata', nome:'Fata / Pixie', desc:'Altissima e cristallina. Mantiene la voce pulita ma la trasporta in un mondo magico.',
-   p:{pitch:9, ring:0, ringMix:0, comb:.05, combHz:800, crush:16, drive:0}, f:{type:'highpass', freq:400, q:.5}},
-  {id:'lich', nome:'Lich / Scheletro', desc:'Voce antica, gracchiante e corrotta dal tempo. Perfetta per necromanti e non-morti.',
+  {id:'mindflayer', nome:'Illithid', desc:'Telepatica, aliena e ronzante.',
+   p:{pitch:-2, ring:180, ringMix:.6, comb:.3, combHz:220, crush:16, drive:.1}, f:{type:'peaking', freq:1200, q:1.5, gain:0}},
+  {id:'cavaliere', nome:'Cavaliere', desc:'Ovattata e metallica, come dentro un elmo chiuso.',
+   p:{pitch:0, ring:0, ringMix:0, comb:.4, combHz:350, crush:16, drive:.1}, f:{type:'bandpass', freq:800, q:1.5}},
+  {id:'nano', nome:'Nano', desc:'Burbera e baritonale con una leggera risonanza toracica.',
+   p:{pitch:-3, ring:0, ringMix:0, comb:.15, combHz:140, crush:16, drive:.2}, f:{type:'lowpass', freq:2200, q:.5}},
+  {id:'lich', nome:'Lich', desc:'Gracchiante e corrotta dal tempo.',
    p:{pitch:-3, ring:0, ringMix:0, comb:.35, combHz:95, crush:7, drive:.45}, f:{type:'bandpass', freq:1600, q:1.5}},
-  {id:'golem', nome:'Golem', desc:'Pesante, meccanica e risonante. Come se parlassi attraverso tonnellate di roccia.',
-   p:{pitch:-5, ring:70, ringMix:.35, comb:.4, combHz:180, crush:16, drive:.2}, f:{type:'lowpass', freq:1200, q:.8}},
-  {id:'spirito', nome:'Spettro', desc:'Eterea, tremolante e con un rimbombo vuoto. Ottima per apparizioni e fantasmi.',
-   p:{pitch:-1, ring:12, ringMix:.4, comb:.65, combHz:130, crush:16, drive:0}, f:{type:'peaking', freq:1000, q:1, gain:0}},
-  {id:'dio', nome:'Entità Divina', desc:'Maestosa e sdoppiata. Una modulazione armonica che dà un senso di onnipotenza.',
+  {id:'fata', nome:'Fata', desc:'Altissima e cristallina. Mantiene la voce pulita.',
+   p:{pitch:9, ring:0, ringMix:0, comb:.05, combHz:800, crush:16, drive:0}, f:{type:'highpass', freq:400, q:.5}},
+  {id:'dio', nome:'Entità Astrale', desc:'Maestosa e sdoppiata. Rimbombo onnipotente.',
    p:{pitch:-2, ring:110, ringMix:.25, comb:.25, combHz:350, crush:16, drive:.05}, f:{type:'lowpass', freq:2500, q:.5}},
 ];
 
+// Caricamento memorie locali
+let customVoices = JSON.parse(localStorage.getItem('gdr_voices')) || [];
+let ALL_PRESETS = [...DEFAULT_PRESETS, ...customVoices];
+
 const FADERS = [
-  {k:'pitch',  nome:'Tono',        min:-12, max:12,  step:1,   fmt:v=> (v>0?'+':'')+v+' semitoni'},
-  {k:'ring',   nome:'Vibrazione',  min:0,   max:300, step:1,   fmt:v=> v===0 ? 'spenta' : v+' Hz'},
-  {k:'ringMix',nome:'Quantità',    min:0,   max:1,   step:.05, fmt:v=> Math.round(v*100)+'%'},
-  {k:'comb',   nome:'Rimbombo',    min:0,   max:.9,  step:.05, fmt:v=> Math.round(v/.9*100)+'%'},
-  {k:'crush',  nome:'Corruzione',  min:3,   max:16,  step:1,   fmt:v=> v>=16 ? 'piena' : v+' bit'},
-  {k:'drive',  nome:'Cattiveria',  min:0,   max:1,   step:.05, fmt:v=> Math.round(v*100)+'%'},
+  {k:'pitch',  nome:'Tono (Gravità/Acutezza)', min:-12, max:12,  step:1,   fmt:v=> (v>0?'+':'')+v+' semitoni'},
+  {k:'ring',   nome:'Frequenza Magica (Alien)',min:0,   max:300, step:1,   fmt:v=> v===0 ? 'spenta' : v+' Hz'},
+  {k:'ringMix',nome:'Intensità Magia',         min:0,   max:1,   step:.05, fmt:v=> Math.round(v*100)+'%'},
+  {k:'comb',   nome:'Risonanza Grotta/Elmo',   min:0,   max:.9,  step:.05, fmt:v=> Math.round(v/.9*100)+'%'},
+  {k:'crush',  nome:'Deterioramento (Non-morte)',min:3, max:16,  step:1,   fmt:v=> v>=16 ? 'piena' : v+' bit'},
+  {k:'drive',  nome:'Brutalità (Saturazione)', min:0,   max:1,   step:.05, fmt:v=> Math.round(v*100)+'%'},
 ];
 
 /* ============================================================
-   3. Logica e Routing di Sistema
+   3. Logica di Rete e UI
    ============================================================ */
 let ctx, node, filter, outGain, monGain, limiter, inGain, playGain, analyser, inAnalyser, recDest, stream, recorder, micTrack;
 let running = false, current = null, mode = 'ptt';
-let params = {...PRESETS[0].p, out:1};
+let params = {...ALL_PRESETS[0].p, out:1};
 let chunks = [], takeN = 0, recPresetName = '';
 let pttChunks = [], pttRec = null, holding = false, lastSource = null;
 
@@ -143,7 +145,7 @@ async function start() {
       audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
     });
   } catch(e) {
-    fail('Microfono non autorizzato o non trovato. Verifica i permessi del browser.');
+    fail('Il Grimorio non ha accesso al microfono. Verifica i permessi del browser.');
     return;
   }
 
@@ -189,8 +191,8 @@ async function start() {
   running = true;
   apply();
   screenEl.classList.add('on');
-  badge.textContent = mode === 'live' ? 'in diretta' : 'pronto';
-  $('#power').textContent = 'Ferma Setup';
+  badge.textContent = mode === 'live' ? 'Incanto Attivo' : 'Pronto';
+  $('#power').textContent = 'Chiudi Sigillo';
   $('#power').classList.remove('go');
   $('#rec').disabled = false;
   $('#ptt').disabled = (mode !== 'ptt');
@@ -203,53 +205,100 @@ function stop() {
   ctx && ctx.close();
   running = false;
   screenEl.classList.remove('on');
-  badge.textContent = 'microfono spento';
-  $('#power').textContent = 'Attiva microfono';
+  badge.textContent = 'Sigillo Chiuso';
+  $('#power').textContent = 'Apri Sigillo (Attiva Mic)';
   $('#power').classList.add('go');
   $('#rec').disabled = true;
   
   const pt = $('#ptt');
   pt.disabled = true; pt.classList.remove('held','playing');
-  pt.textContent = 'Tieni premuto e parla';
+  pt.textContent = 'Premi e Recita la Battuta';
 }
 
 function apply() {
   if(!running) return;
   node.port.postMessage(params);
-  const f = (current || PRESETS[0]).f;
+  const f = (current || ALL_PRESETS[0]).f;
   filter.type = f.type;
   filter.frequency.value = f.freq;
   filter.Q.value = f.q;
   if(f.type === 'peaking') filter.gain.value = f.gain || 0;
 }
 
-/* ============================================================
-   4. Gestione UI (Presets, Faders, Scope, Recording)
-   ============================================================ */
+/* --- Rendering Interfaccia --- */
 const presetBox = $('#presets');
-PRESETS.forEach((pr, i) => {
-  const b = document.createElement('button');
-  b.className = 'preset';
-  b.setAttribute('aria-pressed', i === 0 ? 'true' : 'false');
-  b.innerHTML = '<span class="lamp"></span><span>' + pr.nome + '</span>';
-  b.onclick = () => selectPreset(pr);
-  presetBox.appendChild(b);
-});
+
+function renderPresets() {
+  presetBox.innerHTML = '';
+  ALL_PRESETS.forEach((pr) => {
+    const b = document.createElement('button');
+    b.className = 'preset';
+    b.setAttribute('aria-pressed', (current && current.id === pr.id) ? 'true' : 'false');
+    
+    let html = `<span class="lamp"></span><span>${pr.nome}</span>`;
+    if(pr.isCustom) {
+      html += `<button class="del-btn" title="Dimentica voce">&times;</button>`;
+    }
+    b.innerHTML = html;
+    
+    b.onclick = (e) => {
+      if(e.target.classList.contains('del-btn')){
+        deleteVoice(pr.id, e);
+      } else {
+        selectPreset(pr);
+      }
+    };
+    presetBox.appendChild(b);
+  });
+}
 
 function selectPreset(pr) {
   current = pr;
   params = {...pr.p, out:1};
-  [...presetBox.children].forEach((b, i) => b.setAttribute('aria-pressed', PRESETS[i].id === pr.id ? 'true' : 'false'));
+  renderPresets();
   $('#presetDesc').textContent = pr.desc;
   syncFaders();
   apply();
 }
 
+function deleteVoice(id, e) {
+  e.stopPropagation();
+  if(!confirm("Cancellare questa voce dal grimorio?")) return;
+  customVoices = customVoices.filter(v => v.id !== id);
+  localStorage.setItem('gdr_voices', JSON.stringify(customVoices));
+  ALL_PRESETS = [...DEFAULT_PRESETS, ...customVoices];
+  if(current && current.id === id) selectPreset(ALL_PRESETS[0]);
+  else renderPresets();
+}
+
+$('#saveVoiceBtn').onclick = () => {
+  const input = $('#customName');
+  const name = input.value.trim();
+  if(!name) return alert("Scrivi un nome per l'entità prima di salvarla.");
+  
+  const newVoice = {
+    id: 'custom_' + Date.now(),
+    nome: name,
+    desc: 'Evocazione personalizzata. Creata dalle tue regolazioni.',
+    p: { ...params },
+    f: { ...current.f },
+    isCustom: true
+  };
+  
+  customVoices.push(newVoice);
+  localStorage.setItem('gdr_voices', JSON.stringify(customVoices));
+  ALL_PRESETS = [...DEFAULT_PRESETS, ...customVoices];
+  
+  input.value = '';
+  selectPreset(newVoice);
+};
+
+/* --- Faders --- */
 const faderBox = $('#faders'), inputs = {};
 FADERS.forEach(f => {
   const wrap = document.createElement('div');
   wrap.className = 'fader';
-  wrap.innerHTML = '<label for="f_'+f.k+'"><span>'+f.nome+'</span><b id="v_'+f.k+'"></b></label>';
+  wrap.innerHTML = `<label for="f_${f.k}"><span>${f.nome}</span><b id="v_${f.k}"></b></label>`;
   const r = document.createElement('input');
   r.type = 'range'; r.id = 'f_'+f.k; r.min = f.min; r.max = f.max; r.step = f.step;
   r.oninput = () => {
@@ -269,6 +318,7 @@ function syncFaders() {
   });
 }
 
+/* --- Scope --- */
 const cvs = $('#scope'), g2 = cvs.getContext('2d');
 function fit() {
   const dpr = window.devicePixelRatio || 1;
@@ -286,14 +336,14 @@ function draw() {
   const W = cvs.clientWidth, H = cvs.clientHeight, mid = H/2;
 
   g2.clearRect(0, 0, W, H);
-  g2.strokeStyle = 'rgba(120,150,90,.11)';
+  g2.strokeStyle = 'rgba(212, 175, 55, 0.15)'; // Gold ombra
   g2.lineWidth = 1;
   g2.beginPath(); g2.moveTo(0, mid); g2.lineTo(W, mid); g2.stroke();
 
-  g2.strokeStyle = '#e8801f';
+  g2.strokeStyle = '#d4af37'; // Tratto gold
   g2.lineWidth = 2;
-  g2.shadowColor = 'rgba(232,128,31,.55)';
-  g2.shadowBlur = 9;
+  g2.shadowColor = 'rgba(139,0,0,0.8)'; // Bagliore rosso sangue
+  g2.shadowBlur = 10;
   g2.beginPath();
   for(let i=0; i<n; i++){
     const x = i/(n-1)*W;
@@ -313,24 +363,25 @@ function draw() {
   }
 }
 
+/* --- Recording --- */
 function toggleRec() {
   const btn = $('#rec');
   if(recorder && recorder.state === 'recording'){
     recorder.stop();
-    btn.textContent = 'Registra Sessione';
+    btn.textContent = 'Registra';
     btn.classList.remove('armed');
     badge.textContent = 'in ascolto';
     return;
   }
   chunks = [];
-  recPresetName = (current || PRESETS[0]).nome;
+  recPresetName = (current || ALL_PRESETS[0]).nome;
   recorder = new MediaRecorder(recDest.stream);
   recorder.ondataavailable = e => e.data.size && chunks.push(e.data);
   recorder.onstop = () => addTake(new Blob(chunks, {type: recorder.mimeType}));
   recorder.start();
-  btn.textContent = 'Ferma Registrazione';
+  btn.textContent = 'Ferma Acquisizione';
   btn.classList.add('armed');
-  badge.textContent = 'sto registrando';
+  badge.textContent = 'registrando';
 }
 
 function addTake(blob) {
@@ -339,12 +390,12 @@ function addTake(blob) {
   const li = document.createElement('li');
   const who = document.createElement('span');
   who.className = 'who';
-  who.textContent = recPresetName + ' (Take ' + (++takeN) + ')';
+  who.textContent = recPresetName + ' (' + (++takeN) + ')';
   
   const au = document.createElement('audio'); au.controls = true; au.src = url;
   const dl = document.createElement('a');
-  dl.href = url; dl.download = 'GDR-Voce-' + recPresetName.replace(/\s+/g, '-').toLowerCase() + '-' + takeN + '.' + ext;
-  dl.textContent = 'Salva File';
+  dl.href = url; dl.download = 'GDR-' + recPresetName.replace(/\s+/g, '-').toLowerCase() + '-' + takeN + '.' + ext;
+  dl.textContent = 'Scarica';
   
   li.append(who, au, dl);
   $('#takes').prepend(li);
@@ -353,17 +404,6 @@ function addTake(blob) {
 
 $('#power').onclick = () => running ? stop() : start();
 $('#rec').onclick = toggleRec;
-$('#beep').onclick = async () => {
-  if(!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
-  await ctx.resume();
-  const o = ctx.createOscillator(), g = ctx.createGain();
-  o.type = 'sine'; o.frequency.value = 520;
-  g.gain.setValueAtTime(0, ctx.currentTime);
-  g.gain.linearRampToValueAtTime(.35, ctx.currentTime + .02);
-  g.gain.linearRampToValueAtTime(0, ctx.currentTime + .5);
-  o.connect(g).connect(ctx.destination);
-  o.start(); o.stop(ctx.currentTime + .55);
-};
 
 function setMode(m) {
   const wasRunning = running;
@@ -373,9 +413,6 @@ function setMode(m) {
   $('#mLive').setAttribute('aria-pressed', m === 'live');
   $('#ptt').hidden = (m !== 'ptt');
   $('#aecWrap').hidden = (m !== 'live');
-  $('#tip').textContent = m === 'ptt'
-    ? 'La voce uscirà appena rilasci il pulsante. Perfetto per preparare la battuta senza sovrapposizioni.'
-    : 'MODALITÀ MASTER: Usa per forza le cuffie, altrimenti si creeranno rimbombi e ritorni molesti durante il gioco.';
   if(wasRunning) start();
 }
 
@@ -396,8 +433,8 @@ function pttStart(e) {
   pttRec.onstop = playBack;
   pttRec.start();
   pttBtn.classList.add('held');
-  pttBtn.textContent = 'Stai interpretando...';
-  badge.textContent = 'ruolando';
+  pttBtn.textContent = 'Parla ora...';
+  badge.textContent = 'assorbendo';
 }
 
 function pttEnd(e) {
@@ -406,13 +443,13 @@ function pttEnd(e) {
   holding = false;
   pttRec && pttRec.state === 'recording' && pttRec.stop();
   pttBtn.classList.remove('held');
-  pttBtn.textContent = 'Lancio l\'audio...';
+  pttBtn.textContent = 'Rilascio magia...';
 }
 
 async function playBack() {
   const blob = new Blob(pttChunks, {type: pttRec.mimeType || 'audio/webm'});
   if(blob.size < 1500) {
-    fail('Nessun audio registrato. Tieni premuto mentre reciti la battuta.');
+    fail('Nessun suono captato. Avvicinati e parla durante la pressione.');
     resetPtt(); return;
   }
   inGain.gain.setTargetAtTime(0, ctx.currentTime, .01);
@@ -422,20 +459,14 @@ async function playBack() {
   player.src = URL.createObjectURL(blob);
   player.volume = 1;
   pttBtn.classList.add('playing');
-  pttBtn.textContent = 'Il tavolo sta ascoltando...';
-  badge.textContent = 'riproduzione';
+  pttBtn.textContent = 'In riproduzione...';
+  badge.textContent = 'evocando';
   player.onended = resetPtt;
-  player.onerror = () => {
-    fail('Errore di riproduzione nel browser. Usa la Diretta Continua con le cuffie.');
-    resetPtt();
-  };
+  player.onerror = () => { fail('Errore audio.'); resetPtt(); };
   try {
     await player.play();
     errBox.style.display = 'none';
-  } catch(err) {
-    fail('Riproduzione bloccata. Clicca di nuovo il bottone.');
-    resetPtt();
-  }
+  } catch(err) { resetPtt(); }
 }
 
 function resetPtt() {
@@ -443,8 +474,8 @@ function resetPtt() {
   if(micTrack) micTrack.enabled = true;
   inGain.gain.setTargetAtTime(1, ctx.currentTime, .05);
   pttBtn.classList.remove('held','playing');
-  pttBtn.textContent = 'Tieni premuto e parla';
-  badge.textContent = 'pronto';
+  pttBtn.textContent = 'Premi e Recita la Battuta';
+  badge.textContent = 'Pronto';
 }
 
 pttBtn.addEventListener('pointerdown', pttStart);
@@ -453,5 +484,6 @@ pttBtn.addEventListener('pointercancel', pttEnd);
 pttBtn.addEventListener('pointerleave', pttEnd);
 pttBtn.addEventListener('contextmenu', e => e.preventDefault());
 
+// Setup Iniziale
+selectPreset(ALL_PRESETS[0]); // Seleziona il primo e renderizza i pulsanti
 setMode('ptt');
-selectPreset(PRESETS[0]);
