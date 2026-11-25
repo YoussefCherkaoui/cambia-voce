@@ -4,7 +4,7 @@ Modificatore di voce nel browser per giochi di ruolo: scegli un'entità (orco, d
 
 **Prova online:** https://youssefcherkaoui.github.io/cambia-voce/
 
-![Il Grimorio delle Voci](https://raw.githubusercontent.com/YoussefCherkaoui/portfolio/main/img/cambia-voce.jpg)
+![Il Grimorio delle Voci](https://raw.githubusercontent.com/YoussefCherkaoui/YoussefCherkaoui.github.io/main/img/cambia-voce.jpg)
 
 ## Cosa fa
 
